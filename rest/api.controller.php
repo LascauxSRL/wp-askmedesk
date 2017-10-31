@@ -63,17 +63,26 @@ class AskmeDeskRestController extends WP_REST_Controller {
 	public function crea_richiesta(WP_REST_Request $request) {
 		$priority = 'G3';
 		$channel = 'WEB';
-		$args = array(
-			'idServizio' => $request->get_param( 'idServizio' ),
-			'idAssetRoot' => $request->get_param( 'idAssetRoot' ),
+		$idUtente = 222;
+		$serviceCode = get_option('askmedesk_servicecode');
+		$assetCode = get_option('askmedesk_asscode');
+ 		$args = array(
+			'idServizio' => $serviceCode,
+			'idAssetRoot' => $assetCode,
 			'idTipoRichiesta' => $request->get_param( 'idTipoRichiesta' ),
 			'oggetto' => $request->get_param( 'oggetto' ),
 			'descrizione' => $request->get_param( 'descrizione' ),
 			'codUrgenza' => $priority,
 			'codPriorita' => $priority,
-			'codiceCanale' => $channel
+			'codiceCanale' => $channel,
+			'idUtente' => $idUtente
 		);
-		return new WP_REST_Response(404);
+		$url = $this->endpoint . "/domains/tipiRichiesta?idServizio=".$serviceCode."&idAssetPadre=".$assetCode;		
+		$response = $this->httpPost($url, $args);
+		if($response != null){
+			return new WP_REST_Response($response, 200);
+		}
+		return new WP_REST_Response(400);
     }
 	
 	
@@ -82,6 +91,20 @@ class AskmeDeskRestController extends WP_REST_Controller {
 	 */
 	private function httpGet($url){
 		$response = wp_remote_get($url, $this->args);
+		if ( is_array( $response ) ) {
+			$body = json_decode(wp_remote_retrieve_body( $response ), true);
+			return $body;
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 */
+	private function httpPost($url, $data){
+		$args = $this->args;
+		$args['body'] = $data;
+		$response = wp_remote_post($url, $args);
 		if ( is_array( $response ) ) {
 			$body = json_decode(wp_remote_retrieve_body( $response ), true);
 			return $body;
