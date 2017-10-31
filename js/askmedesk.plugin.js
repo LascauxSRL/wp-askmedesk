@@ -27,8 +27,7 @@
              /**
              * Creazione richiesta
              */
-            _api.creaRichiesta = function(options){
-                var data = {idRichiesta: 1};
+            _api.creaRichiesta = function(data){
                 var url = this._endpoint + this._namespace + '/creazione-richiesta';
                 return $.post(url, data);
             }

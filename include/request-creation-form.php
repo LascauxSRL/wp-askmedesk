@@ -9,13 +9,15 @@ function askmedesk_request_form_creation(){
     </p>
     <p>
         <label>Tipo richiesta</label>
-        <select class="askmedesk-select-tipirichiesta">
-            <option>Generica</option>
-        </select>
+        <select class="askmedesk-select-tipirichiesta"></select>
+    </p>
+    <p>
+        <label>Oggetto</label>
+        <input type="text" class="askmedesk-input-oggetto" name="oggetto" placeholder="Oggetto"></textarea>
     </p>
     <p>
         <label>Messaggio</label>
-        <textarea name="message" placeholder="Inserisci qui il tuo messaggio..."></textarea>
+        <textarea class="askmedesk-input-descrizione" name="message" placeholder="Inserisci qui il tuo messaggio..."></textarea>
     </p>
     <button type="submit">Invia</button>
 </form>

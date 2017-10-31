@@ -9,6 +9,8 @@ class AskmeDeskRestController extends WP_REST_Controller {
         $askmeEndpoint = get_option('askmedesk_apiendpoint');
         $username = get_option('askmedesk_username');
 		$password = get_option('askmedesk_password');
+		$this->session_id = null;
+		$this->csrf_token = null;
 		$this->endpoint = $askmeEndpoint;
 		$this->args = array(
 			'headers' => array(
@@ -38,6 +40,34 @@ class AskmeDeskRestController extends WP_REST_Controller {
 	}
 
 	/**
+	 * Autenticazione
+	 *
+	 * @return WP_Error|WP_REST_Response
+	 */
+	public function set_csrf_token() {
+		if($this->csrf_token == null){
+			$url = $this->endpoint . "/authentication/token";
+			$response = $this->httpGet($url);
+			if($response != null){
+				$this->csrf_token = $response['token'];
+				$this->session_id = $response['sessionId'];
+				$username = get_option('askmedesk_username');
+				$password = get_option('askmedesk_password');
+				$this->args = array(
+					'headers' => array(
+					  'X-CSRF-TOKEN' => $this->csrf_token
+					)
+				);
+				setcookie("JSESSIONID",$this->session_id, time() + 1800);
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
 	 * Recupera i tipi richiesta
 	 *
 	 * @param WP_REST_Request $request Full data about the request.
@@ -51,7 +81,7 @@ class AskmeDeskRestController extends WP_REST_Controller {
 		if($response != null){
 			return new WP_REST_Response($response, 200);
 		}
-		return new WP_REST_Response(404);
+		return new WP_REST_Response(400);
 	}
 	
 	/**
@@ -61,23 +91,26 @@ class AskmeDeskRestController extends WP_REST_Controller {
 	 * @return WP_Error|WP_REST_Response
 	 */
 	public function crea_richiesta(WP_REST_Request $request) {
+		$this->set_csrf_token();
 		$priority = 'G3';
 		$channel = 'WEB';
 		$idUtente = 222;
 		$serviceCode = get_option('askmedesk_servicecode');
 		$assetCode = get_option('askmedesk_asscode');
- 		$args = array(
+		 $args = array(
 			'idServizio' => $serviceCode,
 			'idAssetRoot' => $assetCode,
+			'idAssetFiglio' => $assetCode,
 			'idTipoRichiesta' => $request->get_param( 'idTipoRichiesta' ),
 			'oggetto' => $request->get_param( 'oggetto' ),
 			'descrizione' => $request->get_param( 'descrizione' ),
 			'codUrgenza' => $priority,
 			'codPriorita' => $priority,
 			'codiceCanale' => $channel,
-			'idUtente' => $idUtente
+			'idUtente' => $idUtente,
+			'idUtenteRichiedente' => 578
 		);
-		$url = $this->endpoint . "/domains/tipiRichiesta?idServizio=".$serviceCode."&idAssetPadre=".$assetCode;		
+		$url = $this->endpoint . "/richieste/creazione-richiesta-ct";		
 		$response = $this->httpPost($url, $args);
 		if($response != null){
 			return new WP_REST_Response($response, 200);
